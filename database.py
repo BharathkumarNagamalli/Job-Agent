@@ -47,9 +47,22 @@ def init_db():
             linkedin TEXT,
             github TEXT,
             portfolio TEXT,
-            summary TEXT
+            summary TEXT,
+            resume_text TEXT,
+            resume_filename TEXT
         )
     """)
+
+    # Check for new columns and add them if missing
+    try:
+        c.execute("ALTER TABLE profile ADD COLUMN resume_text TEXT")
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+
+    try:
+        c.execute("ALTER TABLE profile ADD COLUMN resume_filename TEXT")
+    except sqlite3.OperationalError:
+        pass  # Column already exists
 
     # Insert default profile if not exists
     c.execute("SELECT COUNT(*) FROM profile")

@@ -9,8 +9,21 @@
     </div>
 </div>
 
-<form method="POST" action="{{ url_for('profile.save_profile') }}">
+<form method="POST" action="{{ url_for('profile.save_profile') }}" enctype="multipart/form-data">
     <div class="profile-grid">
+
+        <div class="card full-width">
+            <h2 class="card-title">Resume Upload</h2>
+            <div class="form-group">
+                <p>Upload a PDF resume to improve AI context matching.</p>
+                <input type="file" name="resume_pdf" accept=".pdf" class="form-control" style="margin-bottom: 1rem;">
+                {% if profile.resume_filename %}
+                    <p class="form-hint" style="color: green;">Current resume: <strong>{{ profile.resume_filename }}</strong></p>
+                {% else %}
+                    <p class="form-hint">No resume uploaded currently.</p>
+                {% endif %}
+            </div>
+        </div>
 
         <div class="card">
             <h2 class="card-title">Personal Info</h2>

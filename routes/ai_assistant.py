@@ -41,13 +41,19 @@ def get_profile_text():
     conn.close()
     if not p:
         return ""
-    return f"""
+    
+    # Use uploaded resume if available
+    base_info = f"""
 Name: {p['name']}
 Skills: {p['skills']}
 Experience: {p['experience']}
 Education: {p['education']}
 Summary: {p['summary'] or 'Fresh graduate seeking software development roles'}
 """
+    if p.get('resume_text'):
+        base_info += f"\nDetailed Resume/CV:\n{p['resume_text']}\n"
+    
+    return base_info
 
 
 @ai_bp.route("/ai-assistant")
