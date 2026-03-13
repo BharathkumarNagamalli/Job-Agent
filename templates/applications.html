@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Application Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Application Tracker</h1>
+        <p class="page-subtitle">Track every job you've saved or applied to</p>
+    </div>
+    <a href="{{ url_for('jobs.search') }}" class="btn btn-primary">+ Add Jobs</a>
+</div>
+
+<!-- Status Filter Tabs -->
+<div class="filter-tabs">
+    <a href="{{ url_for('applications.applications') }}" class="filter-tab {% if filter_status == 'all' %}active{% endif %}">
+        All <span class="tab-count">{{ counts.all }}</span>
+    </a>
+    {% for s in status_order %}
+    <a href="{{ url_for('applications.applications', status=s) }}"
+       class="filter-tab {% if filter_status == s %}active{% endif %}"
+       style="--tab-color: {{ status_colors[s] }};">
+        {{ s|capitalize }} <span class="tab-count">{{ counts[s] }}</span>
+    </a>
+    {% endfor %}
+</div>
+
+{% if jobs %}
+<div class="applications-list">
+    {% for job in jobs %}
+    <div class="app-card" id="app-{{ job.id }}">
+        <div class="app-card-main">
+            <div class="app-info">
+                <div class="app-title">{{ job.title }}</div>
+                <div class="app-company">{{ job.company }}</div>
+                <div class="app-meta">
+                    {% if job.location %}<span>📍 {{ job.location }}</span>{% endif %}
+                    {% if job.salary and job.salary != 'Not disclosed' %}<span>💰 {{ job.salary }}</span>{% endif %}
+                    <span>📅 Saved {{ job.date_saved[:10] }}</span>
+                </div>
+            </div>
+
+            <div class="app-right">
+                <span class="status-badge status-{{ job.status }}">{{ job.status|capitalize }}</span>
+
+                <!-- Status Dropdown -->
+                <form method="POST" action="{{ url_for('applications.update_status', app_id=job.id) }}" class="inline-form">
+                    <select name="status" onchange="this.form.submit()" class="status-select">
+                        {% for s in ['saved', 'applied', 'interviewing', 'offered', 'rejected'] %}
+                        <option value="{{ s }}" {% if job.status == s %}selected{% endif %}>→ {{ s|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="hidden" name="notes" value="{{ job.notes or '' }}">
+                </form>
+            </div>
+        </div>
+
+        <!-- Notes & Actions -->
+        <div class="app-card-footer">
+            <div class="notes-area">
+                <textarea class="notes-input" placeholder="Add notes (interview date, contact info, feedback...)" 
+                          data-id="{{ job.id }}"
+                          onblur="saveNotes(this)">{{ job.notes or '' }}</textarea>
+            </div>
+            <div class="app-actions">
+                {% if job.apply_url %}
+                <a href="{{ job.apply_url }}" target="_blank" class="btn btn-ghost btn-xs">🔗 Apply Link</a>
+                {% endif %}
+                <a href="{{ url_for('ai.ai_assistant') }}?title={{ job.title }}&company={{ job.company }}" class="btn btn-ghost btn-xs">🤖 Cover Letter</a>
+                <form method="POST" action="{{ url_for('applications.delete_application', app_id=job.id) }}" 
+                      onsubmit="return confirm('Remove this application?')">
+                    <button type="submit" class="btn btn-danger btn-xs">🗑 Remove</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state large">
+    <div class="empty-icon">📋</div>
+    <h3>No applications {% if filter_status != 'all' %}with status "{{ filter_status }}"{% else %}tracked yet{% endif %}</h3>
+    <p><a href="{{ url_for('jobs.search') }}">Search for jobs</a> and save them to start tracking.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function saveNotes(el) {
+    const appId = el.dataset.id;
+    const form = new FormData();
+    form.append('notes', el.value);
+    await fetch(`/applications/${appId}/notes`, { method: 'POST', body: form });
+}
+</script>
+{% endblock %}

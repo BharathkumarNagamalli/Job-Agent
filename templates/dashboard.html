@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Your job search at a glance</p>
+    </div>
+    <a href="{{ url_for('jobs.search') }}" class="btn btn-primary">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Search Jobs
+    </a>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card stat-total">
+        <div class="stat-number">{{ stats.total }}</div>
+        <div class="stat-label">Total Tracked</div>
+        <div class="stat-icon">📊</div>
+    </div>
+    <div class="stat-card stat-saved">
+        <div class="stat-number">{{ stats.saved }}</div>
+        <div class="stat-label">Saved</div>
+        <div class="stat-icon">🔖</div>
+    </div>
+    <div class="stat-card stat-applied">
+        <div class="stat-number">{{ stats.applied }}</div>
+        <div class="stat-label">Applied</div>
+        <div class="stat-icon">✉️</div>
+    </div>
+    <div class="stat-card stat-interviewing">
+        <div class="stat-number">{{ stats.interviewing }}</div>
+        <div class="stat-label">Interviewing</div>
+        <div class="stat-icon">🎯</div>
+    </div>
+    <div class="stat-card stat-offered">
+        <div class="stat-number">{{ stats.offered }}</div>
+        <div class="stat-label">Offers</div>
+        <div class="stat-icon">🏆</div>
+    </div>
+</div>
+
+{% if stats.total > 0 %}
+<!-- Pipeline Bar -->
+<div class="card">
+    <h2 class="card-title">Application Pipeline</h2>
+    <div class="pipeline-bar">
+        {% set statuses = [('saved','#4A9EFF'), ('applied','#F59E0B'), ('interviewing','#8B5CF6'), ('offered','#10B981'), ('rejected','#EF4444')] %}
+        {% for s, color in statuses %}
+            {% if stats[s] > 0 %}
+            <div class="pipeline-segment" style="width: {{ (stats[s] / stats.total * 100)|round(1) }}%; background: {{ color }};"
+                 title="{{ s|capitalize }}: {{ stats[s] }}">
+                <span>{{ s|capitalize }}</span>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% if stats.applied > 0 %}
+    <p class="pipeline-note">
+        Response rate: 
+        {% if stats.applied > 0 %}
+            <strong>{{ ((stats.interviewing + stats.offered) / stats.applied * 100)|round(0)|int }}%</strong>
+        {% endif %}
+        of applications got a response
+    </p>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Recent Activity -->
+<div class="card">
+    <div class="card-header-row">
+        <h2 class="card-title">Recent Activity</h2>
+        <a href="{{ url_for('applications.applications') }}" class="link-muted">View all →</a>
+    </div>
+
+    {% if recent %}
+    <div class="job-list">
+        {% for job in recent %}
+        <div class="job-row">
+            <div class="job-info">
+                <div class="job-title-text">{{ job.title }}</div>
+                <div class="job-meta">{{ job.company }} · {{ job.location or 'Remote' }}</div>
+            </div>
+            <div class="job-actions">
+                <span class="status-badge status-{{ job.status }}">{{ job.status|capitalize }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <p>No jobs tracked yet. <a href="{{ url_for('jobs.search') }}">Search for jobs</a> to get started.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions-grid">
+    <a href="{{ url_for('jobs.search') }}" class="quick-action-card">
+        <div class="qa-icon">🔍</div>
+        <div class="qa-title">Search Jobs</div>
+        <div class="qa-desc">Find Python, Full Stack & Backend roles</div>
+    </a>
+    <a href="{{ url_for('ai.ai_assistant') }}" class="quick-action-card">
+        <div class="qa-icon">✍️</div>
+        <div class="qa-title">AI Cover Letter</div>
+        <div class="qa-desc">Generate tailored cover letters instantly</div>
+    </a>
+    <a href="{{ url_for('ai.ai_assistant') }}#interview" class="quick-action-card">
+        <div class="qa-icon">🎯</div>
+        <div class="qa-title">Interview Prep</div>
+        <div class="qa-desc">Practice questions for your target roles</div>
+    </a>
+    <a href="{{ url_for('profile.profile') }}" class="quick-action-card">
+        <div class="qa-icon">👤</div>
+        <div class="qa-title">Update Profile</div>
+        <div class="qa-desc">Keep your skills and experience current</div>
+    </a>
+</div>
+{% endblock %}

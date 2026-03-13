@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}JobAgent{% endblock %} — AI Job Search</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar">
+    <a class="nav-brand" href="{{ url_for('jobs.dashboard') }}">
+        <span class="brand-icon">⬡</span>
+        <span class="brand-text">JobAgent<span class="brand-ai">.ai</span></span>
+    </a>
+    <ul class="nav-links">
+        <li><a href="{{ url_for('jobs.dashboard') }}" class="nav-link {% if request.endpoint == 'jobs.dashboard' %}active{% endif %}">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Dashboard
+        </a></li>
+        <li><a href="{{ url_for('jobs.search') }}" class="nav-link {% if request.endpoint == 'jobs.search' %}active{% endif %}">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Search Jobs
+        </a></li>
+        <li><a href="{{ url_for('applications.applications') }}" class="nav-link {% if request.endpoint == 'applications.applications' %}active{% endif %}">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Tracker
+        </a></li>
+        <li><a href="{{ url_for('ai.ai_assistant') }}" class="nav-link {% if request.endpoint == 'ai.ai_assistant' %}active{% endif %}">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+            AI Assistant
+        </a></li>
+        <li><a href="{{ url_for('profile.profile') }}" class="nav-link {% if request.endpoint == 'profile.profile' %}active{% endif %}">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Profile
+        </a></li>
+    </ul>
+</nav>
+
+<main class="main-content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="toast toast-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+</main>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

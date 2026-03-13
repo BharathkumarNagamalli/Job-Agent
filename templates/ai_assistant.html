@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% block title %}AI Assistant{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">AI Assistant</h1>
+        <p class="page-subtitle">Powered by Google Gemini</p>
+    </div>
+</div>
+
+<div class="ai-layout">
+    <!-- Left: Tools -->
+    <div class="ai-tools">
+
+        <!-- Cover Letter -->
+        <div class="ai-card" id="cover-letter">
+            <div class="ai-card-header">
+                <span class="ai-card-icon">✍️</span>
+                <h3>Cover Letter Generator</h3>
+            </div>
+            <div class="ai-form">
+                <div class="form-group">
+                    <label>Job Title</label>
+                    <input type="text" id="cl-title" placeholder="Python Developer" value="{{ request.args.get('title', '') }}">
+                </div>
+                <div class="form-group">
+                    <label>Company</label>
+                    <input type="text" id="cl-company" placeholder="TCS, Infosys, Startup..." value="{{ request.args.get('company', '') }}">
+                </div>
+                <div class="form-group">
+                    <label>Job Description (optional)</label>
+                    <textarea id="cl-desc" rows="3" placeholder="Paste the job description here..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Tone</label>
+                    <select id="cl-tone">
+                        <option value="professional">Professional</option>
+                        <option value="enthusiastic">Enthusiastic</option>
+                        <option value="concise">Concise</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary w-full" onclick="generateCoverLetter()">
+                    Generate Cover Letter
+                </button>
+            </div>
+            <div class="ai-output" id="cl-output" style="display:none">
+                <div class="output-header">
+                    <span>Generated Cover Letter</span>
+                    <button onclick="copyOutput('cl-content')" class="btn btn-ghost btn-xs">📋 Copy</button>
+                </div>
+                <div class="output-content" id="cl-content"></div>
+            </div>
+        </div>
+
+        <!-- Interview Prep -->
+        <div class="ai-card" id="interview">
+            <div class="ai-card-header">
+                <span class="ai-card-icon">🎯</span>
+                <h3>Interview Preparation</h3>
+            </div>
+            <div class="ai-form">
+                <div class="form-group">
+                    <label>Job Title</label>
+                    <input type="text" id="ip-title" placeholder="Full Stack Developer">
+                </div>
+                <div class="form-group">
+                    <label>Company</label>
+                    <input type="text" id="ip-company" placeholder="Company name (optional)">
+                </div>
+                <div class="form-group">
+                    <label>Prep Type</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="prep_type" value="questions" checked> Interview Questions
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="prep_type" value="technical"> Technical Deep-Dive
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="prep_type" value="tips"> Interview Tips
+                        </label>
+                    </div>
+                </div>
+                <button class="btn btn-primary w-full" onclick="generateInterviewPrep()">
+                    Generate Prep Material
+                </button>
+            </div>
+            <div class="ai-output" id="ip-output" style="display:none">
+                <div class="output-header">
+                    <span>Interview Preparation</span>
+                    <button onclick="copyOutput('ip-content')" class="btn btn-ghost btn-xs">📋 Copy</button>
+                </div>
+                <div class="output-content" id="ip-content"></div>
+            </div>
+        </div>
+
+        <!-- Resume Tips -->
+        <div class="ai-card">
+            <div class="ai-card-header">
+                <span class="ai-card-icon">📄</span>
+                <h3>Resume Tips</h3>
+            </div>
+            <div class="ai-form">
+                <div class="form-group">
+                    <label>Target Role</label>
+                    <input type="text" id="rt-title" placeholder="Backend Developer">
+                </div>
+                <button class="btn btn-primary w-full" onclick="generateResumeTips()">
+                    Get Resume Tips
+                </button>
+            </div>
+            <div class="ai-output" id="rt-output" style="display:none">
+                <div class="output-header">
+                    <span>Resume Tips</span>
+                    <button onclick="copyOutput('rt-content')" class="btn btn-ghost btn-xs">📋 Copy</button>
+                </div>
+                <div class="output-content" id="rt-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Chat Assistant -->
+    <div class="ai-chat-panel">
+        <div class="ai-card ai-chat-card">
+            <div class="ai-card-header">
+                <span class="ai-card-icon">💬</span>
+                <h3>Job Search Chat</h3>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-msg assistant">
+                    <div class="msg-bubble">
+                        👋 Hi Bharath! I'm your AI job search assistant. I can help you with:
+                        <ul>
+                            <li>Job search strategy for Hyderabad & remote roles</li>
+                            <li>Resume & cover letter advice</li>
+                            <li>Interview preparation for Python/Full Stack roles</li>
+                            <li>Salary negotiation tips</li>
+                        </ul>
+                        What would you like help with?
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input-row">
+                <input type="text" id="chatInput" placeholder="Ask anything about your job search..." 
+                       onkeydown="if(event.key==='Enter') sendChat()">
+                <button class="btn btn-primary" onclick="sendChat()">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let chatHistory = [];
+
+async function callAI(endpoint, data) {
+    const resp = await fetch(endpoint, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    });
+    return await resp.json();
+}
+
+function renderMarkdown(text) {
+    return text
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/^## (.+)$/gm, '<h4>$1</h4>')
+        .replace(/^# (.+)$/gm, '<h3>$1</h3>')
+        .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+        .replace(/^- (.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>\n?)+/g, (m) => `<ul>${m}</ul>`)
+        .replace(/\n\n/g, '<br><br>')
+        .replace(/\n/g, '<br>');
+}
+
+async function generateCoverLetter() {
+    const btn = event.target;
+    btn.textContent = 'Generating...';
+    btn.disabled = true;
+    
+    const data = await callAI('/ai/cover-letter', {
+        job_title: document.getElementById('cl-title').value,
+        company: document.getElementById('cl-company').value,
+        description: document.getElementById('cl-desc').value,
+        tone: document.getElementById('cl-tone').value,
+    });
+    
+    btn.textContent = 'Generate Cover Letter';
+    btn.disabled = false;
+    
+    const output = document.getElementById('cl-output');
+    const content = document.getElementById('cl-content');
+    output.style.display = 'block';
+    
+    if (data.success) {
+        content.innerHTML = renderMarkdown(data.content);
+    } else {
+        content.innerHTML = `<div class="error-text">Error: ${data.error}</div>`;
+    }
+}
+
+async function generateInterviewPrep() {
+    const btn = event.target;
+    btn.textContent = 'Generating...';
+    btn.disabled = true;
+    
+    const prepType = document.querySelector('input[name="prep_type"]:checked').value;
+    const data = await callAI('/ai/interview-prep', {
+        job_title: document.getElementById('ip-title').value,
+        company: document.getElementById('ip-company').value,
+        prep_type: prepType,
+    });
+    
+    btn.textContent = 'Generate Prep Material';
+    btn.disabled = false;
+    
+    const output = document.getElementById('ip-output');
+    const content = document.getElementById('ip-content');
+    output.style.display = 'block';
+    
+    if (data.success) {
+        content.innerHTML = renderMarkdown(data.content);
+    } else {
+        content.innerHTML = `<div class="error-text">Error: ${data.error}</div>`;
+    }
+}
+
+async function generateResumeTips() {
+    const btn = event.target;
+    btn.textContent = 'Generating...';
+    btn.disabled = true;
+    
+    const data = await callAI('/ai/resume-tips', {
+        job_title: document.getElementById('rt-title').value,
+    });
+    
+    btn.textContent = 'Get Resume Tips';
+    btn.disabled = false;
+    
+    const output = document.getElementById('rt-output');
+    const content = document.getElementById('rt-content');
+    output.style.display = 'block';
+    
+    if (data.success) {
+        content.innerHTML = renderMarkdown(data.content);
+    } else {
+        content.innerHTML = `<div class="error-text">Error: ${data.error}</div>`;
+    }
+}
+
+async function sendChat() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (!message) return;
+    
+    input.value = '';
+    addChatMessage('user', message);
+    chatHistory.push({ role: 'user', content: message });
+    
+    // Typing indicator
+    const typingId = addChatMessage('assistant', '...', true);
+    
+    const data = await callAI('/ai/chat', {
+        message: message,
+        history: chatHistory,
+    });
+    
+    document.getElementById(typingId).remove();
+    
+    if (data.success) {
+        addChatMessage('assistant', data.content);
+        chatHistory.push({ role: 'assistant', content: data.content });
+    } else {
+        addChatMessage('assistant', `Sorry, I encountered an error: ${data.error}`);
+    }
+}
+
+function addChatMessage(role, content, isTyping = false) {
+    const id = 'msg-' + Date.now();
+    const div = document.createElement('div');
+    div.className = `chat-msg ${role}`;
+    div.id = id;
+    
+    if (isTyping) {
+        div.innerHTML = `<div class="msg-bubble typing"><span></span><span></span><span></span></div>`;
+    } else {
+        div.innerHTML = `<div class="msg-bubble">${renderMarkdown(content)}</div>`;
+    }
+    
+    const container = document.getElementById('chatMessages');
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return id;
+}
+
+function copyOutput(id) {
+    const text = document.getElementById(id).innerText;
+    navigator.clipboard.writeText(text);
+    showToast('✅ Copied to clipboard!', 'success');
+}
+
+// Check for pre-filled values from tracker
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('title')) document.getElementById('cl-title').value = urlParams.get('title');
+if (urlParams.get('company')) document.getElementById('cl-company').value = urlParams.get('company');
+</script>
+{% endblock %}

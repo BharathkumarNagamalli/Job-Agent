@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">My Profile</h1>
+        <p class="page-subtitle">Your details used for AI-generated cover letters and job matching</p>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('profile.save_profile') }}">
+    <div class="profile-grid">
+
+        <div class="card">
+            <h2 class="card-title">Personal Info</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="name" value="{{ profile.name or '' }}" placeholder="BharathKumar Nagamalli">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ profile.email or '' }}" placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" name="phone" value="{{ profile.phone or '' }}" placeholder="+91 9999999999">
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" name="location" value="{{ profile.location or '' }}" placeholder="Hyderabad, Telangana">
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Online Presence</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>LinkedIn</label>
+                    <input type="url" name="linkedin" value="{{ profile.linkedin or '' }}" placeholder="https://linkedin.com/in/...">
+                </div>
+                <div class="form-group">
+                    <label>GitHub</label>
+                    <input type="url" name="github" value="{{ profile.github or '' }}" placeholder="https://github.com/...">
+                </div>
+                <div class="form-group">
+                    <label>Portfolio / Website</label>
+                    <input type="url" name="portfolio" value="{{ profile.portfolio or '' }}" placeholder="https://yoursite.com">
+                </div>
+            </div>
+        </div>
+
+        <div class="card full-width">
+            <h2 class="card-title">Professional Summary</h2>
+            <div class="form-group">
+                <textarea name="summary" rows="4" placeholder="Brief summary about yourself (used in cover letters)...">{{ profile.summary or '' }}</textarea>
+            </div>
+        </div>
+
+        <div class="card full-width">
+            <h2 class="card-title">Skills</h2>
+            <div class="form-group">
+                <textarea name="skills" rows="3" placeholder="Python, Flask, JavaScript, React, SQL, Git...">{{ profile.skills or '' }}</textarea>
+                <small class="form-hint">Comma-separated list of your technical skills</small>
+            </div>
+        </div>
+
+        <div class="card full-width">
+            <h2 class="card-title">Experience</h2>
+            <div class="form-group">
+                <textarea name="experience" rows="5" placeholder="Describe your work experience...">{{ profile.experience or '' }}</textarea>
+            </div>
+        </div>
+
+        <div class="card full-width">
+            <h2 class="card-title">Education</h2>
+            <div class="form-group">
+                <textarea name="education" rows="3" placeholder="B.Tech CSE - College Name, Year">{{ profile.education or '' }}</textarea>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-lg">Save Profile</button>
+    </div>
+</form>
+{% endblock %}

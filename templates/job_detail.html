@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title if job else 'Job Detail' }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <a href="{{ url_for('jobs.search') }}" class="btn btn-ghost">← Back to Search</a>
+</div>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% elif job %}
+<div class="job-detail-layout">
+    <div class="job-detail-main card">
+        <div class="jd-header">
+            <div class="company-logo large">
+                {% if job.logo %}
+                <img src="{{ job.logo }}" alt="{{ job.company }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                {% endif %}
+                <div class="company-initials" {% if job.logo %}style="display:none"{% endif %}>
+                    {{ job.company[:2].upper() }}
+                </div>
+            </div>
+            <div>
+                <h1 class="jd-title">{{ job.title }}</h1>
+                <div class="jd-company">{{ job.company }}</div>
+                <div class="jd-meta">
+                    <span>📍 {{ job.location }}</span>
+                    <span>💼 {{ job.job_type or 'Full Time' }}</span>
+                    {% if job.remote %}<span class="remote-tag">🌐 Remote</span>{% endif %}
+                    {% if job.salary != 'Not disclosed' %}<span>💰 {{ job.salary }}</span>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="jd-actions">
+            <a href="{{ job.apply_url }}" target="_blank" class="btn btn-primary btn-lg">Apply Now →</a>
+            {% if not saved %}
+            <button class="btn btn-ghost btn-lg" onclick="saveJob({{ job | tojson | safe }})">🔖 Save to Tracker</button>
+            {% else %}
+            <span class="badge-saved">✅ Saved to Tracker</span>
+            {% endif %}
+            <a href="{{ url_for('ai.ai_assistant') }}?title={{ job.title }}&company={{ job.company }}" class="btn btn-ghost btn-lg">🤖 Generate Cover Letter</a>
+        </div>
+
+        {% if job.highlights %}
+        <div class="jd-highlights">
+            {% if job.highlights.get('Qualifications') %}
+            <div class="highlight-section">
+                <h3>Qualifications</h3>
+                <ul>{% for q in job.highlights['Qualifications'] %}<li>{{ q }}</li>{% endfor %}</ul>
+            </div>
+            {% endif %}
+            {% if job.highlights.get('Responsibilities') %}
+            <div class="highlight-section">
+                <h3>Responsibilities</h3>
+                <ul>{% for r in job.highlights['Responsibilities'] %}<li>{{ r }}</li>{% endfor %}</ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="jd-description">
+            <h3>Full Job Description</h3>
+            <div class="description-text">{{ job.description | replace('\n', '<br>') | safe }}</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function saveJob(job) {
+    const resp = await fetch('/applications/save', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            job_id: job.id,
+            title: job.title,
+            company: job.company,
+            location: job.location,
+            salary: job.salary,
+            job_type: job.job_type,
+            description: job.description,
+            apply_url: job.apply_url,
+        })
+    });
+    const data = await resp.json();
+    showToast(data.success ? '✅ Saved to tracker!' : '❌ ' + data.error, data.success ? 'success' : 'error');
+}
+</script>
+{% endblock %}
